@@ -1,25 +1,41 @@
 #![feature(destructuring_assignment)]
+
+#[cfg(feature = "chrono")]
+use chrono::{Local, Timelike};
+#[cfg (not(feature = "chrono"))]
+use std::convert::TryInto;
+
 use std::time::*;
-use std::str::Split;
 
-fn unix_time_to_smh(mut seconds: u64) -> (u64, u64, u64)
-{
-    let mut  minutes = seconds/60;
-    let mut  hours   = minutes/60;
-    minutes%=60;
-    hours%=24;
-    seconds%=60;
 
-    return (seconds, minutes, hours)
-}
-fn time_now() -> (u64, u64, u64)
+
+///returns current time in utc+0, (seconds minutes hours)
+#[cfg(not (feature = "chrono"))]
+fn time_now() -> (u32, u32, u32)
 {
+    fn unix_time_to_smh(mut seconds: u64) -> (u32, u32, u32)
+    {
+        let mut  minutes = seconds/60;
+        let mut  hours   = minutes/60;
+        minutes%=60;
+        hours%=24;
+        seconds%=60;
+
+        (seconds.try_into().unwrap(), minutes.try_into().unwrap(), hours.try_into().unwrap())
+    }
     let now = SystemTime::now();
     match now.duration_since(UNIX_EPOCH)
     {
         Ok(val) =>  unix_time_to_smh(val.as_secs()),
         Err(_) => unimplemented!(),
     }
+}
+///returns current local time. seconds minutes hours
+#[cfg(feature = "chrono")]
+fn time_now()  -> (u32, u32, u32)
+{
+    let time = Local::now().naive_local().time();
+    (time.second(), time.minute(), time.hour())
 }
 
 
@@ -90,9 +106,9 @@ fn pretty_digits_table(ch:char) -> String
 
 struct PrettyTimeStamp
 {
-    hours:u64,
-    minutes:u64,
-    seconds:u64
+    hours:u32,
+    minutes:u32,
+    seconds:u32
 }
 impl PrettyTimeStamp
 {
@@ -105,20 +121,20 @@ impl PrettyTimeStamp
     {
         let string = self.to_str();
         let mut vec: Vec<String> = Vec::new();
-        let mut splitVec :Vec<Vec<String>> = Vec::new();
+        let mut split_vec :Vec<Vec<String>> = Vec::new();
 
         for i in string.chars()
         {
             let pretty_symbol = pretty_digits_table(i);
-            splitVec.push(pretty_symbol.split("\n").map(|x| String::from(x)).collect());
+            split_vec.push(pretty_symbol.split('\n').map(String::from).collect());
         }
         let mut j =0;
-        for i in 0..splitVec[j].len()
+        for i in 0..split_vec[j].len()
         {
             vec.push(String::from(""));
-            for _ in 0..splitVec.len()
+            for _ in 0..split_vec.len()
             {
-                vec[i]+=&splitVec[j][i];
+                vec[i]+=&split_vec[j][i];
                 j+=1;
             }
             j=0;
@@ -132,13 +148,13 @@ impl PrettyTimeStamp
             result_str+="\n"
         }
 
-        return result_str;
+        result_str
     }
 
 
-    fn new(hours:u64, minutes:u64, seconds:u64) -> PrettyTimeStamp
+    fn new(hours:u32, minutes:u32, seconds:u32) -> PrettyTimeStamp
     {
-        PrettyTimeStamp{hours:hours, minutes:minutes, seconds:seconds}
+        PrettyTimeStamp{hours, minutes, seconds}
     }
     fn now() -> PrettyTimeStamp
     {
@@ -161,6 +177,7 @@ fn main() {
     loop
     {
         println!("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"); //dont mind me
+        println!("{:?}", time_now());
         println!("{}", PrettyTimeStamp::now());
         std::thread::sleep(Duration::new(1, 0));
 
