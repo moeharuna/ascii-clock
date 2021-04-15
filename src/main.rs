@@ -177,7 +177,6 @@ fn main() {
     loop
     {
         println!("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"); //dont mind me
-        println!("{:?}", time_now());
         println!("{}", PrettyTimeStamp::now());
         std::thread::sleep(Duration::new(1, 0));
 
